@@ -66,37 +66,69 @@ python manage.py migrate
 <details>
   <summary>文件树</summary>
 ├───.idea
+  
 │   └───inspectionProfiles
+
 ├───apps
+
 │   ├───course
+
 │   │   ├───migrations
+
 │   │   │   └───__pycache__
+
 │   │   └───__pycache__
+
 │   ├───department
+
 │   │   ├───migrations
+
 │   │   │   └───__pycache__
+
 │   │   └───__pycache__
+
 │   ├───privilege
+
 │   │   ├───migrations
+
 │   │   │   └───__pycache__
+
 │   │   └───__pycache__
+
 │   ├───user
+
 │   │   ├───migrations
+
 │   │   │   └───__pycache__
+
 │   │   └───__pycache__
+
 │   ├───video
+
 │   │   ├───migrations
+
 │   │   │   └───__pycache__
+
 │   │   └───__pycache__
+
 │   └───__pycache__
+
 ├───config
+
 │   └───__pycache__
+
 ├───operation_platform_backend
+
 │   └───__pycache__
+
 ├───service
+
 │   └───__pycache__
+
 └───utils
+
     └───__pycache__
+  
 - `.gitignore`: Git版本控制系统的忽略文件列表。
 - `manage.py`: Django项目的管理脚本。
 - `README.md`: 项目的说明文档。
