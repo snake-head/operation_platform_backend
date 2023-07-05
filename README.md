@@ -64,9 +64,88 @@ python manage.py migrate
 中。
 
 <details>
-  <summary>点击这里展开/折叠内容</summary>
-  
-  这是可折叠的内容。
-  
-  可以包含任意的Markdown文本、HTML标签和其他内容。
+  <summary>文件树</summary>
+├───.idea
+│   └───inspectionProfiles
+├───apps
+│   ├───course
+│   │   ├───migrations
+│   │   │   └───__pycache__
+│   │   └───__pycache__
+│   ├───department
+│   │   ├───migrations
+│   │   │   └───__pycache__
+│   │   └───__pycache__
+│   ├───privilege
+│   │   ├───migrations
+│   │   │   └───__pycache__
+│   │   └───__pycache__
+│   ├───user
+│   │   ├───migrations
+│   │   │   └───__pycache__
+│   │   └───__pycache__
+│   ├───video
+│   │   ├───migrations
+│   │   │   └───__pycache__
+│   │   └───__pycache__
+│   └───__pycache__
+├───config
+│   └───__pycache__
+├───operation_platform_backend
+│   └───__pycache__
+├───service
+│   └───__pycache__
+└───utils
+    └───__pycache__
+- `.gitignore`: Git版本控制系统的忽略文件列表。
+- `manage.py`: Django项目的管理脚本。
+- `README.md`: 项目的说明文档。
+- `requirements.txt`: 列出了项目所需的Python依赖包。
+
+下面是各个目录的说明：
+
+- `.idea`: 包含用于JetBrains IDE（如PyCharm）的项目配置文件。
+- `apps`: 包含Django应用程序的目录。每个应用程序都是一个独立的模块，包含了模型、视图、URL配置等。
+  - `course`: 一个名为"course"的应用程序。
+  - `department`: 一个名为"department"的应用程序。
+  - `privilege`: 一个名为"privilege"的应用程序。
+  - `user`: 一个名为"user"的应用程序。
+  - `video`: 一个名为"video"的应用程序。
+
+每个应用程序目录的结构相似，包含以下文件和目录：
+
+- `admin.py`: Django的后台管理配置文件。
+- `apps.py`: 应用程序的配置文件。
+- `models.py`: 应用程序的模型文件，定义数据库模型。
+- `tests.py`: 应用程序的测试文件。
+- `urls.py`: 应用程序的URL配置文件。
+- `views.py`: 应用程序的视图函数文件。
+- `migrations`: 包含应用程序的数据库迁移文件。
+- `__pycache__`: 包含Python字节码文件。
+
+其他目录的说明：
+
+- `config`: 包含项目的配置文件。
+  - `settings_dev.py`: 开发环境的配置文件。
+  - `settings_prod.py`: 生产环境的配置文件。
+
+- `operation_platform_backend`: 项目的核心应用程序。
+  - `asgi.py`: ASGI服务器配置文件。
+  - `settings.py`: 项目的主要配置文件。
+  - `urls.py`: 项目的URL配置文件。
+  - `wsgi.py`: WSGI服务器配置文件。
+
+- `service`: 包含一些服务模块。
+  - `multipart_file_upload.py`: 处理多部分文件上传的模块。
+
+- `utils`: 包含一些工具模块。
+  - `exception_handler.py`: 异常处理的模块。
+  - `paginator.py`: 分页处理的模块。
+  - `queryset_filter.py`: 查询集过滤的模块。
+  - `response.py`: 响应处理的模块。
+  - `serializer.py`: 序列化处理的模块。
+
+每个模块目录包含一个`__init__.py`文件，使其成为一个Python包。
+
+这是一个典型的Django项目文件树，其中包含了应用程序、配置文件、工具模块等。每个应用程序负责不同的功能模块，而配置文件和核心应用程序则管理整个项目的配置和请求处理。
 </details>
