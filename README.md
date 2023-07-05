@@ -64,71 +64,8 @@ python manage.py migrate
 中。
 
 <details>
-  <summary>文件树</summary>
-├───.idea
-  
-│   └───inspectionProfiles
+  <summary>对其中文件的说明</summary>
 
-├───apps
-
-│   ├───course
-
-│   │   ├───migrations
-
-│   │   │   └───__pycache__
-
-│   │   └───__pycache__
-
-│   ├───department
-
-│   │   ├───migrations
-
-│   │   │   └───__pycache__
-
-│   │   └───__pycache__
-
-│   ├───privilege
-
-│   │   ├───migrations
-
-│   │   │   └───__pycache__
-
-│   │   └───__pycache__
-
-│   ├───user
-
-│   │   ├───migrations
-
-│   │   │   └───__pycache__
-
-│   │   └───__pycache__
-
-│   ├───video
-
-│   │   ├───migrations
-
-│   │   │   └───__pycache__
-
-│   │   └───__pycache__
-
-│   └───__pycache__
-
-├───config
-
-│   └───__pycache__
-
-├───operation_platform_backend
-
-│   └───__pycache__
-
-├───service
-
-│   └───__pycache__
-
-└───utils
-
-    └───__pycache__
-  
 - `.gitignore`: Git版本控制系统的忽略文件列表。
 - `manage.py`: Django项目的管理脚本。
 - `README.md`: 项目的说明文档。
@@ -179,5 +116,4 @@ python manage.py migrate
 
 每个模块目录包含一个`__init__.py`文件，使其成为一个Python包。
 
-这是一个典型的Django项目文件树，其中包含了应用程序、配置文件、工具模块等。每个应用程序负责不同的功能模块，而配置文件和核心应用程序则管理整个项目的配置和请求处理。
 </details>
