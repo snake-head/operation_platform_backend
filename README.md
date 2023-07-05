@@ -63,3 +63,10 @@ python manage.py migrate
 项目中视频处理的部分大量使用到FFmpeg，因此需要先安装[FFmpeg](https://ffmpeg.org/)工具，安装完成后将其添加到环境变量`path`
 中。
 
+<details>
+  <summary>点击这里展开/折叠内容</summary>
+  
+  这是可折叠的内容。
+  
+  可以包含任意的Markdown文本、HTML标签和其他内容。
+</details>
