@@ -6,6 +6,7 @@ from rest_framework import serializers
 
 from apps.course.models import Course, CourseType
 from apps.department.models import Department
+from apps.knowledge.models import Knowledge
 from apps.privilege.models import Privilege
 from apps.user.models import UserEntity
 from apps.video.models import Video
@@ -77,6 +78,7 @@ class VideoSerializer(serializers.ModelSerializer):
     coverImgUrl = FileUrlField(label='视频封面图片的地址', help_text='不能直接使用，需要配合nginx之类进行反向代理')
     resolutionVersion = StringListField(label='视频支持的分辨率', required=False, allow_null=True, allow_blank=True,
                                         help_text='列表格式')
+    metadata = serializers.JSONField(label='补充信息', help_text='内容包括视频分段信息等', default=dict)  # 添加metadata字段
 
     class Meta:
         model = Video
@@ -182,6 +184,25 @@ class DepartmentSerializer(serializers.ModelSerializer):
             }
         }
 
+
+class KnowledgeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Knowledge
+        fields = '__all__'
+        extra_kwargs = {
+            'pageName': {
+                'label': '词条名称',
+                'help_text': '词条名称，具有唯一性'
+            },
+            'courseTypeId': {
+                'label': '类别编号',
+                'help_text': '该词条所属的分类，具有唯一性'
+            },
+            'pageContent': {
+                'label': '词条内容',
+                'help_text': '该词条需要展示的内容，json格式'
+            }
+        }
 
 class CourseTypeSerializer(serializers.ModelSerializer):
     class Meta:

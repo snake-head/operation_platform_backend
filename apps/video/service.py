@@ -9,6 +9,7 @@ from rest_framework.viewsets import ModelViewSet
 
 from apps.video.models import StatusEnum
 from service.multipart_file_upload import MultipartFileUploadService
+from defog.defog import DefogModel
 
 
 def extract_ext(file_path: str):
@@ -49,14 +50,37 @@ class VideoUploadService(MultipartFileUploadService):
             self.generate_video_poster(input_path, poster_path)
             # todo step1 将原视频交给去雾模型进行演算
             # step2 将去雾视频转换为其它分辨率，共3个分辨率以供选择(1980x1080, 1280x720, 640x360)
-            multi_resolution_output = self.resolution_conversion(input_path, ['1980x1080', '1280x720', '640x360'])
-            # step3 将原视频和去雾视频转为dash(异步)
-            self.convert2dash(multi_resolution_output, mpd_path)
+            # multi_resolution_output = self.resolution_conversion(input_path, ['1980x1080', '1280x720', '640x360'])
+            multi_resolution_output = self.resolution_conversion_new(input_path, ['1980x1080', '1280x720', '640x360'],
+                                                                     ['8M', '4.5M', '1.5M'])
+
+            if_defog = False
+            if if_defog:
+                defog_video_path = self.defog_video(input_path)
+                multi_resolution_output_defog = self.resolution_conversion_new(defog_video_path,
+                                                                               ['1980x1080', '1280x720', '640x360'],
+                                                                               ['8.1M', '4.6M', '1.6M'])
+                # step3 将原视频和去雾视频转为dash(异步)
+                self.convert2dash(multi_resolution_output + multi_resolution_output_defog, mpd_path)
+            else:
+                self.convert2dash(multi_resolution_output, mpd_path)
 
             # 更新数据库状态
             operator.get_queryset().filter(videoId=video_id).update(
                 status=StatusEnum.FINISHED.value,
-                resolutionVersion='1980x1080,1280x720,640x320'
+                resolutionVersion='1980x1080,1280x720,640x320',
+                metadata={
+                    'phase': [
+                        {
+                            'time': 1,
+                            'text': '准备阶段',
+                        },
+                        {
+                            'time': 3,
+                            'text': '第一阶段',
+                        }
+                    ],
+                }
             )
 
         threading.Thread(target=time_consuming_process).start()
@@ -70,15 +94,67 @@ class VideoUploadService(MultipartFileUploadService):
         file_path_, ext = extract_ext(input_path)
         output_list = []
         output_path_list = []
+
+        # 检查音频流是否存在
+        probe = ffmpeg.probe(input_path)
+        has_audio = any(stream.get('codec_type') == 'audio' for stream in probe['streams'])
+
         for target_resolution in target_resolution_list:
             output_path = f'{file_path_}_{target_resolution}.{ext}'
+            print(output_path)
             output_path_list.append(output_path)
             input_ = ffmpeg.input(input_path)
-            output_list.append(ffmpeg.filter(input_.video, "scale", target_resolution)
-                               .output(input_.audio, output_path))
+            video = ffmpeg.filter(input_.video, "scale", target_resolution)
+            if has_audio:
+                output = video.output(input_.audio, output_path)
+            else:
+                output = video.output(output_path)
+            output_list.append(output)
 
-        ffmpeg.merge_outputs(*output_list).run(quiet=True)
+        ffmpeg.merge_outputs(*output_list).run(quiet=False)
+        return output_path_list
+
+    def resolution_conversion_new(self, input_path: str, target_resolution_list: Sequence[str],
+                                  target_bv_list: Sequence[str]):
+        file_path_, ext = extract_ext(input_path)
+        output_list = []
+        output_path_list = []
+
+        # 检查音频流是否存在
+        probe = ffmpeg.probe(input_path)
+        has_audio = any(stream.get('codec_type') == 'audio' for stream in probe['streams'])
+
+        for i, target_resolution in enumerate(target_resolution_list):
+            output_path = f'{file_path_}_{target_resolution}.{ext}'
+            print(output_path)
+            output_path_list.append(output_path)
+            input_ = ffmpeg.input(input_path)
+            video = input_.video.filter('scale', target_resolution).filter('setdar', '16/9')
+
+            if has_audio:
+                output = video.output(input_.audio, output_path, b=target_bv_list[i])
+            else:
+                output = video.output(output_path, b=target_bv_list[i])
+            output_list.append(output)
+
+        ffmpeg.merge_outputs(*output_list).run(quiet=False)
         return output_path_list
 
     def generate_video_poster(self, video_path: str, poster_path: str):
-        ffmpeg.input(video_path, ss="00:00:00").output(poster_path, vframes=1).run(quiet=True)
+        probe = ffmpeg.probe(video_path)
+        video_duration = float(probe['format']['duration'])
+        if video_duration >= 60.0:  # 大于等于1分钟
+            time_point = "00:01:00"
+        else:  # 小于1分钟
+            time_point = "00:00:00"
+        try:
+            ffmpeg.input(video_path, ss=time_point).output(poster_path, vframes=1).run(quiet=True)
+        except ffmpeg.Error as e:
+            print("An error occurred while generating the video poster: {0}".format(e))
+
+    def defog_video(self, input_path: str):
+        defog_model = DefogModel(input_path)
+        defog_model.video2image()
+        defog_model.inference()
+        defog_video_path = defog_model.image2video()
+        return defog_video_path

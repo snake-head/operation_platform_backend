@@ -27,6 +27,7 @@ class Video(models.Model):
     courseId = models.CharField(max_length=50, null=True, blank=True)
     resolutionVersion = models.CharField(max_length=50, null=True, blank=True)
     status = models.IntegerField(default=StatusEnum.UNKNOWN.value, choices=StatusChoices.choices)
+    metadata = models.JSONField(default=dict)
 
     class Meta:
         db_table = 'video'

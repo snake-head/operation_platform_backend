@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     'apps.department',
     'apps.course',
     'apps.privilege',
+    'apps.knowledge',
     'drf_yasg',
 ]
 

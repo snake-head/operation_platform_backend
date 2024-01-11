@@ -2,6 +2,7 @@ from django_filters import rest_framework as filters
 
 from apps.course.models import Course, CourseType
 from apps.department.models import Department
+from apps.knowledge.models import Knowledge
 from apps.privilege.models import Privilege
 from apps.user.models import UserEntity
 from apps.video.models import Video
@@ -135,6 +136,32 @@ class DepartmentFilter(filters.FilterSet):
             },
             'deptCode': {
                 'help_text': '代表一个部门，具有唯一性'
+            },
+        }
+
+
+class KnowledgeFilter(filters.FilterSet):
+    pageName_like = filters.CharFilter(field_name='pageName', lookup_expr='contains', help_text='词条名称，支持模糊查询')
+
+    @classmethod
+    def filter_for_field(cls, field, field_name, lookup_expr=None):
+        extra_kwargs = cls.Meta.extra_kwargs
+        filter_class = super().filter_for_field(field, field_name, lookup_expr)
+        filter_class.extra['help_text'] = extra_kwargs.get(field_name, {}).get('help_text', "")
+        return filter_class
+
+    class Meta:
+        model = Knowledge
+        fields = [
+            'pageName',
+            'courseTypeId'
+        ]
+        extra_kwargs = {
+            'pageName': {
+                'help_text': '词条名称，具有唯一性'
+            },
+            'courseTypeId': {
+                'help_text': '该词条所属的分类，具有唯一性'
             },
         }
 
