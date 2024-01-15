@@ -49,16 +49,16 @@ class VideoUploadService(MultipartFileUploadService):
             # step0 为视频生成首帧封面
             self.generate_video_poster(input_path, poster_path)
             # todo step1 将原视频交给去雾模型进行演算
-            # step2 将去雾视频转换为其它分辨率，共3个分辨率以供选择(1980x1080, 1280x720, 640x360)
-            # multi_resolution_output = self.resolution_conversion(input_path, ['1980x1080', '1280x720', '640x360'])
-            multi_resolution_output = self.resolution_conversion_new(input_path, ['1980x1080', '1280x720', '640x360'],
+            # step2 将去雾视频转换为其它分辨率，共3个分辨率以供选择(1920x1080, 1280x720, 640x360)
+            # multi_resolution_output = self.resolution_conversion(input_path, ['1920x1080', '1280x720', '640x360'])
+            multi_resolution_output = self.resolution_conversion_new(input_path, ['1920x1080', '1280x720', '640x360'],
                                                                      ['8M', '4.5M', '1.5M'])
 
             if_defog = False
             if if_defog:
                 defog_video_path = self.defog_video(input_path)
                 multi_resolution_output_defog = self.resolution_conversion_new(defog_video_path,
-                                                                               ['1980x1080', '1280x720', '640x360'],
+                                                                               ['1920x1080', '1280x720', '640x360'],
                                                                                ['8.1M', '4.6M', '1.6M'])
                 # step3 将原视频和去雾视频转为dash(异步)
                 self.convert2dash(multi_resolution_output + multi_resolution_output_defog, mpd_path)
@@ -68,7 +68,7 @@ class VideoUploadService(MultipartFileUploadService):
             # 更新数据库状态
             operator.get_queryset().filter(videoId=video_id).update(
                 status=StatusEnum.FINISHED.value,
-                resolutionVersion='1980x1080,1280x720,640x320',
+                resolutionVersion='1920x1080,1280x720,640x360',
                 metadata={
                     'phase': [
                         {
