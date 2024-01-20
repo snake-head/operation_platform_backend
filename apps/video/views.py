@@ -18,6 +18,8 @@ from utils.queryset_filter import VideoFilter
 from utils.response import JsonResponse
 from utils.serializer import VideoSerializer
 
+from apps.video import tasks
+
 MEDIA_ROOT = settings.MEDIA_ROOT
 
 
@@ -158,6 +160,7 @@ class VideoViewSet(viewsets.ModelViewSet):
         file_hash = request.data.get('fileHash')
         file_ext = request.data.get('fileExt')
         file_name = request.data.get('fileName')
+        course_id = request.data.get('courseId')
 
         origin_path = self.video_upload_service.merge_file_chunk(file_hash, file_ext)
         target_path = self.video_upload_service.move_to_db_dictionary(origin_path)
@@ -169,14 +172,18 @@ class VideoViewSet(viewsets.ModelViewSet):
             "videoName": file_name,
             "videoUrl": os.path.relpath(mpd_path, MEDIA_ROOT),
             "coverImgUrl": os.path.relpath(poster_path, MEDIA_ROOT),
+            "courseId": course_id,
             "status": StatusEnum.PROCESSING.value
         }
         serializer = self.get_serializer(data=video_data)
         serializer.is_valid(raise_exception=True)
+        # step0 为视频生成首帧封面
+        self.video_upload_service.generate_video_poster(target_path, poster_path)
+        # 先更新数据库，再视频后处理
         self.perform_create(serializer)
         headers = self.get_success_headers(serializer.data)
-        # 先更新数据库，再视频后处理
-        self.video_upload_service.video_process(target_path, mpd_path, poster_path, video_id, self)
+        # self.video_upload_service.video_process(target_path, mpd_path, poster_path, video_id, self)
+        tasks.video_process(target_path, mpd_path, video_id)
         return JsonResponse(data=serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
     @swagger_auto_schema(

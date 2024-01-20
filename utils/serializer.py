@@ -66,7 +66,7 @@ class CourseSerializer(serializers.ModelSerializer):
                 'label': '课程类别id',
                 'help_text': '标识课程属于哪个类别，与CourseType表有关'
             },
-            'deptCode': {
+            'department': {
                 'label': '部门id',
                 'help_text': '标识课程属于哪个部门，与Department表有关'
             }
@@ -150,11 +150,11 @@ class UserSerializer(serializers.ModelSerializer):
                 'label': '用户性别',
                 'help_text': '用户性别'
             },
-            'privCode': {
+            'privilege': {
                 'label': '用户权限id',
                 'help_text': '描述用户所具有的权限，与Privilege表相关'
             },
-            'deptCode': {
+            'department': {
                 'label': '用户所属部门id',
                 'help_text': '描述用户所属部门信息，与Department表相关'
             },

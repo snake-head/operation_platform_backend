@@ -1,5 +1,6 @@
 import os
 import shutil
+import subprocess
 import threading
 from pathlib import Path
 from typing import Sequence
@@ -46,8 +47,7 @@ class VideoUploadService(MultipartFileUploadService):
 
     def video_process(self, input_path: str, mpd_path: str, poster_path: str, video_id: str, operator: ModelViewSet):
         def time_consuming_process():
-            # step0 为视频生成首帧封面
-            self.generate_video_poster(input_path, poster_path)
+            # self.generate_video_poster(input_path, poster_path)
             # todo step1 将原视频交给去雾模型进行演算
             # step2 将去雾视频转换为其它分辨率，共3个分辨率以供选择(1920x1080, 1280x720, 640x360)
             # multi_resolution_output = self.resolution_conversion(input_path, ['1920x1080', '1280x720', '640x360'])
@@ -69,26 +69,16 @@ class VideoUploadService(MultipartFileUploadService):
             operator.get_queryset().filter(videoId=video_id).update(
                 status=StatusEnum.FINISHED.value,
                 resolutionVersion='1920x1080,1280x720,640x360',
-                metadata={
-                    'phase': [
-                        {
-                            'time': 1,
-                            'text': '准备阶段',
-                        },
-                        {
-                            'time': 3,
-                            'text': '第一阶段',
-                        }
-                    ],
-                }
             )
 
         threading.Thread(target=time_consuming_process).start()
 
     def convert2dash(self, input_path_list: Sequence[str], mpd_path: str):
-        input_list = [ffmpeg.input(file_path) for file_path in input_path_list]
-        ffmpeg.output(*input_list, mpd_path, vcodec="h264", acodec="aac", preset="veryfast", seg_duration=5,
-                      adaptation_sets="id=0,streams=v id=1,streams=a", f="dash").run(quiet=True)
+        input_list = [ffmpeg.input(file_path, hwaccel='cuda') for file_path in input_path_list]
+        ffmpeg.output(*input_list, mpd_path, vcodec='h264_nvenc', acodec="aac",
+                      seg_duration=5,
+                      adaptation_sets="id=0,streams=v id=1,streams=a",
+                      f="dash").run(quiet=True)
 
     def resolution_conversion(self, input_path: str, target_resolution_list: Sequence[str]):
         file_path_, ext = extract_ext(input_path)
@@ -128,16 +118,16 @@ class VideoUploadService(MultipartFileUploadService):
             output_path = f'{file_path_}_{target_resolution}.{ext}'
             print(output_path)
             output_path_list.append(output_path)
-            input_ = ffmpeg.input(input_path)
+            input_ = ffmpeg.input(input_path, hwaccel='cuda')
             video = input_.video.filter('scale', target_resolution).filter('setdar', '16/9')
 
             if has_audio:
-                output = video.output(input_.audio, output_path, b=target_bv_list[i])
+                output = video.output(input_.audio, output_path, vcodec='h264_nvenc', b=target_bv_list[i])
             else:
-                output = video.output(output_path, b=target_bv_list[i])
+                output = video.output(output_path, vcodec='h264_nvenc', b=target_bv_list[i])
             output_list.append(output)
 
-        ffmpeg.merge_outputs(*output_list).run(quiet=False)
+        ffmpeg.merge_outputs(*output_list).run(quiet=True)
         return output_path_list
 
     def generate_video_poster(self, video_path: str, poster_path: str):

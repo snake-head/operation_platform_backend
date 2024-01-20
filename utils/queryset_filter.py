@@ -73,8 +73,8 @@ class CourseFilter(filters.FilterSet):
         fields = [
             'id',
             'courseId',
-            'courseTypeId',
-            'deptCode'
+            'courseType',
+            'department'
         ]
         extra_kwargs = {
             'id': {
@@ -83,10 +83,10 @@ class CourseFilter(filters.FilterSet):
             'courseId': {
                 'help_text': '代表一个课程，具有唯一性'
             },
-            'courseTypeId': {
+            'courseType': {
                 'help_text': '标识课程属于哪个类别，与CourseType表有关'
             },
-            'deptCode': {
+            'department': {
                 'help_text': '标识课程属于哪个部门，与Department表有关'
             }
         }
@@ -208,8 +208,8 @@ class UserFilter(filters.FilterSet):
             'uid',
             'email',
             'sex',
-            'privCode',
-            'deptCode',
+            'privilege',
+            'department',
             'phoneNumber'
         ]
         extra_kwargs = {
@@ -225,10 +225,10 @@ class UserFilter(filters.FilterSet):
             'sex': {
                 'help_text': '用户性别'
             },
-            'privCode': {
+            'privilege': {
                 'help_text': '描述用户所具有的权限，与Privilege表相关'
             },
-            'deptCode': {
+            'department': {
                 'help_text': '描述用户所属部门信息，与Department表相关'
             },
             'phoneNumber': {

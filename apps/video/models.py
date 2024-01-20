@@ -18,16 +18,25 @@ class Video(models.Model):
         PROCESSING = StatusEnum.PROCESSING.value
         FINISHED = StatusEnum.FINISHED.value
 
-    videoId = models.CharField(unique=True, max_length=50)
-    videoName = models.CharField(max_length=100)
-    videoUrl = models.CharField(unique=True, max_length=255)
-    coverImgUrl = models.CharField(blank=True, null=True, max_length=255)
-    createdAt = models.DateTimeField(auto_now_add=True)
-    lastModifiedAt = models.DateTimeField(auto_now=True)
-    courseId = models.CharField(max_length=50, null=True, blank=True)
-    resolutionVersion = models.CharField(max_length=50, null=True, blank=True)
-    status = models.IntegerField(default=StatusEnum.UNKNOWN.value, choices=StatusChoices.choices)
-    metadata = models.JSONField(default=dict)
+    videoId = models.CharField(unique=True, max_length=50,
+                               verbose_name="视频ID")
+    videoName = models.CharField(max_length=100, verbose_name="视频名称")
+    videoUrl = models.CharField(unique=True, max_length=255,
+                                verbose_name="视频URL")
+    coverImgUrl = models.CharField(blank=True, null=True, max_length=255,
+                                   verbose_name="封面图像URL")
+    createdAt = models.DateTimeField(auto_now_add=True,
+                                     verbose_name="创建时间")
+    lastModifiedAt = models.DateTimeField(auto_now=True,
+                                          verbose_name="最后修改时间")
+    courseId = models.CharField(max_length=50, null=True, blank=True,
+                                verbose_name="课程ID")
+    resolutionVersion = models.CharField(max_length=50, null=True, blank=True,
+                                         verbose_name="分辨率版本")
+    status = models.IntegerField(default=StatusEnum.UNKNOWN.value,
+                                 choices=StatusChoices.choices,
+                                 verbose_name="状态")
+    metadata = models.JSONField(default=dict, verbose_name="元数据")
 
     class Meta:
         db_table = 'video'
