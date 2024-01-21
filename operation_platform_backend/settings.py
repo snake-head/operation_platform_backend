@@ -15,7 +15,7 @@ from pathlib import Path
 from django.conf.global_settings import STATICFILES_DIRS
 
 # attach os variable 'CURRENT_ENV' and select different settings, default 'dev'
-CURRENT_ENV = os.getenv('CURRENT_ENV', 'dev')
+CURRENT_ENV = os.getenv('CURRENT_ENV', 'prod')
 if CURRENT_ENV == 'prod':
     from config.settings_prod import *
 else:
