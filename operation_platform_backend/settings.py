@@ -52,6 +52,7 @@ INSTALLED_APPS = [
     'apps.privilege',
     'apps.knowledge',
     'drf_yasg',
+    'apps.resource'
 ]
 
 MIDDLEWARE = [

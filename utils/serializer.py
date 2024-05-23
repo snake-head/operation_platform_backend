@@ -10,6 +10,7 @@ from apps.knowledge.models import Knowledge
 from apps.privilege.models import Privilege
 from apps.user.models import UserEntity
 from apps.video.models import Video
+from apps.resource.models import Resource
 
 
 class FileUrlField(serializers.CharField):
@@ -118,6 +119,40 @@ class VideoSerializer(serializers.ModelSerializer):
                     - 3: 准备就绪
                 """
             }
+        }
+
+
+class ResourceSerializer(serializers.ModelSerializer):
+    resourceUrl = FileUrlField(label='资源地址', help_text='不能直接使用，需要配合nginx之类进行反向代理')
+    coverImgUrl = FileUrlField(label='资源封面图片的地址', help_text='不能直接使用，需要配合nginx之类进行反向代理')
+    resolutionVersion = StringListField(label='视频支持的分辨率', required=False, allow_null=True, allow_blank=True,
+                                        help_text='列表格式')
+    metadata = serializers.JSONField(label='补充信息', help_text='内容包括视频分段信息等', default=dict)  # 添加metadata字段
+
+    class Meta:
+        model = Resource
+        fields = '__all__'
+        extra_kwargs = {
+            'id': {
+                'label': '数据库主键id',
+                'help_text': '数据库主键id，为满足数据库约束而存在，具有唯一性'
+            },
+            'resourceHash': {
+                'label': '文件哈希',
+                'help_text': '唯一'
+            },
+            'resourceName': {
+                'label': '资源名称',
+                'help_text': '资源名称'
+            },
+            'createdAt': {
+                'label': '资源创建时间',
+                'help_text': '资源创建时间，添加记录时自动创建'
+            },
+            'courseId': {
+                'label': '课程id',
+                'help_text': '视频所属的课程id'
+            },
         }
 
 

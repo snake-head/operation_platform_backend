@@ -46,14 +46,24 @@ def resolution_conversion_new(input_path: str,
             'setdar', '16/9')
 
         if has_audio:
-            output = video.output(input_.audio, output_path,
-                                  vcodec='h264_nvenc', b=target_bv_list[i])
+            output = ffmpeg.output(input_.audio, video, output_path,
+                                   vcodec='h264_nvenc', b=target_bv_list[i])
         else:
-            output = video.output(output_path, vcodec='h264_nvenc',
-                                  b=target_bv_list[i])
+            output = ffmpeg.output(video, output_path, vcodec='h264_nvenc',
+                                   b=target_bv_list[i])
         output_list.append(output)
 
-    ffmpeg.merge_outputs(*output_list).run(quiet=True)
+    def try_run(tries: int = 4):
+        if tries > 0:
+            try:
+                ffmpeg.merge_outputs(*output_list).run(quiet=False)
+            except Exception as e:
+                print(f'Error: {e}, retrying... {tries - 1} tries left')
+                try_run(tries - 1)
+        else:
+            raise RuntimeError("Maximum retries reached, operation failed")
+
+    try_run()  # Start the recursive retries
     return output_path_list
 
 
@@ -66,11 +76,12 @@ def defog_video(input_path: str):
 
 
 def convert2dash(input_path_list: Sequence[str], mpd_path: str):
-    input_list = [ffmpeg.input(file_path, hwaccel='cuda') for file_path in input_path_list]
+    input_list = [ffmpeg.input(file_path, hwaccel='cuda') for file_path in
+                  input_path_list]
     ffmpeg.output(*input_list, mpd_path, vcodec='h264_nvenc', acodec="aac",
                   seg_duration=5,
                   adaptation_sets="id=0,streams=v id=1,streams=a",
-                  f="dash").run(quiet=True)
+                  f="dash").run(quiet=False)
 
 
 def generate_poster_path(video_path: str, file_hash: str):
@@ -84,26 +95,37 @@ def video_process(input_path: str, mpd_path: str, video_id: str):
     # todo step1 将原视频交给去雾模型进行演算
     # step2 将去雾视频转换为其它分辨率，共3个分辨率以供选择(1920x1080, 1280x720, 640x360)
     # multi_resolution_output = self.resolution_conversion(input_path, ['1920x1080', '1280x720', '640x360'])
-    multi_resolution_output = resolution_conversion_new(input_path, ['1920x1080', '1280x720', '640x360'], ['8M', '4.5M', '1.5M'])
 
-    if_defog = False
-    if if_defog:
-        defog_video_path = defog_video(input_path)
-        multi_resolution_output_defog = resolution_conversion_new(
-            defog_video_path,
-            ['1920x1080', '1280x720', '640x360'],
-            ['8.1M', '4.6M', '1.6M'])
-        # step3 将原视频和去雾视频转为dash(异步)
-        convert2dash(
-            multi_resolution_output + multi_resolution_output_defog, mpd_path)
-    else:
-        convert2dash(multi_resolution_output, mpd_path)
-
-    # 更新数据库状态
-    video = Video.objects.get(videoId=video_id)
-    video.status = StatusEnum.FINISHED.value
-    video.resolutionVersion = '1920x1080,1280x720,640x360'
-    video.save()
+    try:
+        multi_resolution_output = resolution_conversion_new(input_path,
+                                                            ['1920x1080',
+                                                             '1280x720',
+                                                             '640x360'],
+                                                            ['8M', '4.5M',
+                                                             '1.5M'])
+        if_defog = False
+        if if_defog:
+            defog_video_path = defog_video(input_path)
+            multi_resolution_output_defog = resolution_conversion_new(
+                defog_video_path,
+                ['1920x1080', '1280x720', '640x360'],
+                ['8.1M', '4.6M', '1.6M'])
+            # step3 将原视频和去雾视频转为dash(异步)
+            convert2dash(
+                multi_resolution_output + multi_resolution_output_defog,
+                mpd_path)
+        else:
+            convert2dash(multi_resolution_output, mpd_path)
+        # 更新数据库状态
+        video = Video.objects.get(videoId=video_id)
+        video.status = StatusEnum.FINISHED.value
+        video.resolutionVersion = '1920x1080,1280x720,640x360'
+        video.save()
+    except Exception as e:
+        print(e)
+        video = Video.objects.get(videoId=video_id)
+        video.status = StatusEnum.UNKNOWN.value
+        video.save()
 
 
 def generate_video_path():
@@ -132,7 +154,7 @@ def generate_video_path():
 
 def move_video(video_path, folder_path):
     # 移动文件
-    new_video_path = shutil.move(video_path, folder_path)
+    new_video_path = shutil.copy(video_path, folder_path)
     return new_video_path
 
 
@@ -155,10 +177,13 @@ def generate_video_poster(video_path: str, poster_path: str):
     else:  # 小于1分钟
         time_point = "00:00:00"
     try:
-        ffmpeg.input(video_path, ss=time_point).output(poster_path, vframes=1).run(quiet=True)
+        ffmpeg.input(video_path, ss=time_point).output(poster_path,
+                                                       vframes=1).run(
+            quiet=False)
     except ffmpeg.Error as e:
-        print("An error occurred while generating the video poster: {0}".format(e))
-
+        print(
+            "An error occurred while generating the video poster: {0}".format(
+                e))
 
 
 class Command(BaseCommand):
@@ -173,7 +198,7 @@ class Command(BaseCommand):
         course_id = options['course']
         folder_path = generate_video_path()
         file_hash = str(int(time.time()))
-        folder_path = os.path.join(folder_path, file_hash+'.mp4')
+        folder_path = os.path.join(folder_path, file_hash + '.mp4')
 
         target_path = move_video(source_path, folder_path)
         poster_path = generate_poster_path(target_path, file_hash)

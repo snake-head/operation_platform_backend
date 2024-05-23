@@ -6,6 +6,7 @@ from apps.knowledge.models import Knowledge
 from apps.privilege.models import Privilege
 from apps.user.models import UserEntity
 from apps.video.models import Video
+from apps.resource.models import Resource
 
 
 class VideoFilter(filters.FilterSet):
@@ -55,6 +56,41 @@ class VideoFilter(filters.FilterSet):
             """
             }
         }
+
+
+class ResourceFilter(filters.FilterSet):
+    resourceName_like = filters.CharFilter(field_name='resourceName', lookup_expr='contains',
+                                        help_text="资源名称，支持模糊查询")
+    createdAt_lte = filters.DateTimeFilter(field_name='createdAt', lookup_expr='lte',
+                                           help_text="创建时间，查找创建时间小于等于给定时间的资源记录")
+    createdAt_gte = filters.DateTimeFilter(field_name='createdAt', lookup_expr='gte',
+                                           help_text="创建时间，查找创建时间大于等于给定时间的资源记录")
+    @classmethod
+    def filter_for_field(cls, field, field_name, lookup_expr=None):
+        extra_kwargs = cls.Meta.extra_kwargs
+        filter_class = super().filter_for_field(field, field_name, lookup_expr)
+        filter_class.extra['help_text'] = extra_kwargs.get(field_name, {}).get('help_text', "")
+        return filter_class
+
+    class Meta:
+        model = Resource
+        fields = [
+            'id',
+            'resourceHash',
+            'courseId',
+        ]
+        extra_kwargs = {
+            'id': {
+                'help_text': '数据库主键id，为满足数据库约束而存在，具有唯一性'
+            },
+            'resourceHash': {
+                'help_text': '文件哈希，具有唯一性'
+            },
+            'courseId': {
+                'help_text': '资源所属的课程id'
+            },
+        }
+
 
 
 class CourseFilter(filters.FilterSet):
