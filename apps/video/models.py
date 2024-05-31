@@ -37,6 +37,8 @@ class Video(models.Model):
                                  choices=StatusChoices.choices,
                                  verbose_name="状态")
     metadata = models.JSONField(default=dict, verbose_name="元数据")
+    triplet = models.CharField(max_length=200, null=True, blank=True,
+                                         verbose_name="三元组字幕文件路径")
 
     class Meta:
         db_table = 'video'
