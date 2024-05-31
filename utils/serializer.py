@@ -77,6 +77,7 @@ class CourseSerializer(serializers.ModelSerializer):
 class VideoSerializer(serializers.ModelSerializer):
     videoUrl = FileUrlField(label='视频地址', help_text='不能直接使用，需要配合nginx之类进行反向代理')
     coverImgUrl = FileUrlField(label='视频封面图片的地址', help_text='不能直接使用，需要配合nginx之类进行反向代理')
+    triplet = FileUrlField(label='三元组字幕文件的地址', help_text='不能直接使用，需要配合nginx之类进行反向代理')
     resolutionVersion = StringListField(label='视频支持的分辨率', required=False, allow_null=True, allow_blank=True,
                                         help_text='列表格式')
     metadata = serializers.JSONField(label='补充信息', help_text='内容包括视频分段信息等', default=dict)  # 添加metadata字段
@@ -119,10 +120,6 @@ class VideoSerializer(serializers.ModelSerializer):
                     - 3: 准备就绪
                 """
             },
-            'triplet': {
-                'label': '三元组字幕路径',
-                'help_text': '三元组字幕文件.vtt路径'
-            }
         }
 
 
