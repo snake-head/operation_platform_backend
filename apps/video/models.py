@@ -42,3 +42,11 @@ class Video(models.Model):
 
     class Meta:
         db_table = 'video'
+
+
+class CaptionAudio(models.Model):
+    text = models.TextField(null=True, blank=True, verbose_name="文字")
+    audioUrl = models.CharField(unique=True, max_length=255, verbose_name="音频URL")
+
+    class Meta:
+        db_table = 'caption_audio'

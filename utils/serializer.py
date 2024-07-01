@@ -9,7 +9,7 @@ from apps.department.models import Department
 from apps.knowledge.models import Knowledge
 from apps.privilege.models import Privilege
 from apps.user.models import UserEntity
-from apps.video.models import Video
+from apps.video.models import Video, CaptionAudio
 from apps.resource.models import Resource
 
 
@@ -119,6 +119,24 @@ class VideoSerializer(serializers.ModelSerializer):
                     - 2: 正在转码处理中
                     - 3: 准备就绪
                 """
+            },
+        }
+
+
+class CaptionAudioSerializer(serializers.ModelSerializer):
+    audioUrl = FileUrlField(label='音频地址', help_text='不能直接使用，需要配合nginx之类进行反向代理')
+
+    class Meta:
+        model = CaptionAudio
+        fields = '__all__'
+        extra_kwargs = {
+            'id': {
+                'label': '数据库主键id',
+                'help_text': '数据库主键id，为满足数据库约束而存在，具有唯一性'
+            },
+            'text': {
+                'label': '文字',
+                'help_text': '音频的文字内容'
             },
         }
 

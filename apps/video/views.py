@@ -231,3 +231,6 @@ class VideoViewSet(viewsets.ModelViewSet):
         file_ext = request.data.get('fileExt')
         res = self.video_upload_service.verify_should_upload(file_hash, file_ext)
         return JsonResponse(data=res)
+
+
+
