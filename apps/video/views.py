@@ -1,5 +1,7 @@
 # Create your views here.
+import base64
 import os.path
+import subprocess
 import uuid
 
 from django.conf import settings
@@ -17,10 +19,16 @@ from utils.paginator import AppPageNumberPagination
 from utils.queryset_filter import VideoFilter
 from utils.response import JsonResponse
 from utils.serializer import VideoSerializer
+from openai import OpenAI
 
 from apps.video import tasks
 
 MEDIA_ROOT = settings.MEDIA_ROOT
+
+client = OpenAI(
+    api_key=os.environ.get("API_KEY", "0"),
+    base_url=f"http://172.16.200.98:{os.environ.get('API_PORT', 30820)}/v1"
+)
 
 
 @method_decorator(
@@ -232,5 +240,83 @@ class VideoViewSet(viewsets.ModelViewSet):
         res = self.video_upload_service.verify_should_upload(file_hash, file_ext)
         return JsonResponse(data=res)
 
+    # Create a function to handle the POST request
+    @swagger_auto_schema(
+        tags=["手术视频相关接口"],
+        operation_summary="提取视频帧并发送给OpenAI模型",
+        operation_description="**根据视频ID和播放时间提取视频帧，转为base64格式，并发送至OpenAI进行处理**",
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            required=['video_id', 'play_time'],
+            properties={
+                'video_id': openapi.Schema(type=openapi.TYPE_INTEGER,
+                                           description="视频ID"),
+                'play_time': openapi.Schema(type=openapi.TYPE_NUMBER,
+                                            description="提取视频帧的播放时间（秒）"),
+            },
+        ),
+    )
+    @action(detail=False, methods=['post'], url_path='getCaption')
+    def get_caption(self, request, *args, **kwargs):
+        video_id = request.data.get('video_id')
+        play_time = request.data.get('play_time')
 
+        # Check if video exists
+        try:
+            video = Video.objects.get(videoId=video_id)
+        except Video.DoesNotExist:
+            return JsonResponse({"error": "Video not found"},
+                                status=status.HTTP_404_NOT_FOUND)
+
+        # Get the file path of the video
+        video_url = video.coverImgUrl.replace('poster.png', '640x360.mp4')
+        video_file_path = os.path.join(settings.MEDIA_ROOT, video_url)
+
+        # Generate a unique filename for the extracted frame
+        output_image_path = f"{str(uuid.uuid4())}.jpg"
+
+        # Use ffmpeg to extract the frame at the specified play_time
+        try:
+            subprocess.run(
+                [
+                    "ffmpeg",
+                    "-ss", str(play_time),
+                    "-i", video_file_path,
+                    "-vframes", "1",
+                    "-q:v", "2",  # Highest quality JPEG
+                    output_image_path
+                ],
+                check=True
+            )
+        except subprocess.CalledProcessError:
+            return JsonResponse(
+                {"error": "Failed to extract frame from video"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        # Read the image and convert it to base64
+        with open(output_image_path, "rb") as img_file:
+            base64_image = base64.b64encode(img_file.read()).decode('utf-8')
+
+        # Remove the temporary image file
+        os.remove(output_image_path)
+
+        # Send the base64 image to OpenAI
+
+        messages = [
+            {
+                "role": "user",
+                "content": [
+                    {"type": "text", "text": "Please describe this image"},
+                    {"type": "image_url", "image_url": {
+                        "url": f"data:image/jpeg;base64,{base64_image}"}},
+                ]
+            }
+        ]
+
+        result = client.chat.completions.create(messages=messages,
+                                                model="test")
+
+        # Return the response from OpenAI
+        return JsonResponse(
+            {"description": result.choices[0].message.content})
 
