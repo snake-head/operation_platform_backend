@@ -260,6 +260,7 @@ class VideoViewSet(viewsets.ModelViewSet):
     def get_caption(self, request, *args, **kwargs):
         video_id = request.data.get('video_id')
         play_time = request.data.get('play_time')
+        temperature = request.data.get('temperature', 0)  # 从request中获取temperature,默认为0
 
         # Check if video exists
         try:
@@ -313,8 +314,11 @@ class VideoViewSet(viewsets.ModelViewSet):
             }
         ]
 
-        result = client.chat.completions.create(messages=messages,
-                                                model="test")
+        result = client.chat.completions.create(
+            messages=messages,
+            model="test",
+            temperature=temperature  # 使用从request获取的temperature值
+        )
 
         # Return the response from OpenAI
         return JsonResponse(
