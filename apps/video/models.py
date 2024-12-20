@@ -39,6 +39,7 @@ class Video(models.Model):
     metadata = models.JSONField(default=dict, verbose_name="元数据")
     triplet = models.CharField(max_length=200, null=True, blank=True,
                                          verbose_name="三元组字幕文件路径")
+    surgery_info = models.JSONField(default=dict, verbose_name="手术信息")
 
     class Meta:
         db_table = 'video'

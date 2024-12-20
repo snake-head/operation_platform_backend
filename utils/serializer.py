@@ -81,6 +81,7 @@ class VideoSerializer(serializers.ModelSerializer):
     resolutionVersion = StringListField(label='视频支持的分辨率', required=False, allow_null=True, allow_blank=True,
                                         help_text='列表格式')
     metadata = serializers.JSONField(label='补充信息', help_text='内容包括视频分段信息等', default=dict)  # 添加metadata字段
+    surgery_info = serializers.JSONField(label='手术信息', help_text='受术者信息和手术简介等，主要用于精选视频', default=dict)
 
     class Meta:
         model = Video
