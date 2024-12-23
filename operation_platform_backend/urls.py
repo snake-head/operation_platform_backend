@@ -27,6 +27,7 @@ from apps.user.urls import urlpatterns as user_urls
 from apps.video.urls import urlpatterns as video_urls
 from apps.knowledge.urls import urlpatterns as knowledge_urls
 from apps.resource.urls import urlpatterns as resource_urls
+from apps.generatepicture.urls import urlpatterns as generatepicture_urls
 from utils.exception_handler import http404handler, http500handler
 
 API_PREFIX = 'api/v1/'
@@ -52,6 +53,7 @@ urlpatterns = [
     path(API_PREFIX, include(department_urls)),
     path(API_PREFIX, include(knowledge_urls)),
     path(API_PREFIX, include(resource_urls)),
+    path(API_PREFIX, include(generatepicture_urls)),
     # 以下是几种不同的接口文档页面，可以选择一个最舒适的进行阅读
     re_path(r'^swagger(?P<format>\.json|\.yaml)$', schema_view.without_ui(cache_timeout=0), name='schema-json'),
     re_path(r'^swagger/$', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),

@@ -51,6 +51,7 @@ INSTALLED_APPS = [
     'apps.course',
     'apps.privilege',
     'apps.knowledge',
+    'apps.generatepicture',
     'drf_yasg',
     'apps.resource'
 ]
