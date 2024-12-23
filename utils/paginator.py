@@ -4,7 +4,7 @@ from rest_framework.response import Response
 
 class AppPageNumberPagination(PageNumberPagination):
     page_size = 10  # default page size
-    max_page_size = 50
+    max_page_size = 1000 #max page size
     page_query_param = '_page'
     page_size_query_param = '_limit'  # ?_page=xx&_limit=xx
     page_query_description = "获取记录的页码"
