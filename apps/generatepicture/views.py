@@ -22,7 +22,7 @@ def get_pictures(request):
     
     # 定义基础路径和 URL
     BASE_URL = 'https://omentor.vico-lab.com:3443'
-    BASE_PATH = os.path.join(settings.BASE_DIR, 'data', 'Selected_SD_images')
+    BASE_PATH = os.path.join(settings.BASE_DIR, '..', 'data', 'Selected_SD_images')
     folder_path = os.path.join(BASE_PATH, folder_name)
     
     try:
