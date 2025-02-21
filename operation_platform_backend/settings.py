@@ -52,9 +52,13 @@ INSTALLED_APPS = [
     'apps.privilege',
     'apps.knowledge',
     'apps.generatepicture',
+    'apps.login',
     'drf_yasg',
     'apps.resource'
 ]
+
+APP_ID = 'omentor'
+CLIENT_SECRET = 'f6bb29814de2ea1a412d320614304603334d7601'
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',  # 允许跨域中间件
