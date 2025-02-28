@@ -33,7 +33,7 @@ MEDIA_ROOT = settings.MEDIA_ROOT
 
 client = OpenAI(
     api_key=os.environ.get("API_KEY", "0"),
-    base_url=f"http://172.16.200.98:{os.environ.get('API_PORT', 30820)}/v1"
+    base_url=f"http://qwen-service:{os.environ.get('API_PORT', 8000)}/v1"
 )
 
 
@@ -315,6 +315,8 @@ class VideoViewSet(viewsets.ModelViewSet):
         output_image_path = f"{str(uuid.uuid4())}.jpg"
 
         # Use ffmpeg to extract the frame at the specified play_time
+        if 0 < float(play_time) < 10:
+            play_time = 10
         try:
             subprocess.run(
                 [
