@@ -11,8 +11,14 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 """
 import os
 from pathlib import Path
+from dotenv import load_dotenv
 
 from django.conf.global_settings import STATICFILES_DIRS
+
+load_dotenv()
+
+APP_ID = os.environ.get('APP_ID')
+CLIENT_SECRET = os.environ.get('CLIENT_SECRET') # 从环境变量中获取 APP_ID 和 CLIENT_SECRET
 
 # attach os variable 'CURRENT_ENV' and select different settings, default 'dev'
 CURRENT_ENV = os.getenv('CURRENT_ENV', 'prod')
@@ -53,12 +59,10 @@ INSTALLED_APPS = [
     'apps.knowledge',
     'apps.generatepicture',
     'apps.login',
+    'apps.suggestion',
     'drf_yasg',
     'apps.resource'
 ]
-
-APP_ID = 'omentor'
-CLIENT_SECRET = 'f6bb29814de2ea1a412d320614304603334d7601'
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',  # 允许跨域中间件
