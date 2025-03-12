@@ -11,7 +11,8 @@ from apps.privilege.models import Privilege
 from apps.user.models import UserEntity
 from apps.video.models import Video, CaptionAudio
 from apps.resource.models import Resource
-
+from apps.suggestion.models import Suggestion
+from apps.login.models import UserInfo
 
 class FileUrlField(serializers.CharField):
     """
@@ -297,3 +298,15 @@ class PrivilegeSerializer(serializers.ModelSerializer):
                 'help_text': '具有唯一性，用于展示，是人类可读的名称'
             }
         }
+
+class UserInfoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserInfo
+        fields = '__all__'
+
+class SuggestionSerializer(serializers.ModelSerializer):
+    user = UserInfoSerializer(read_only=True)
+
+    class Meta:
+        model = Suggestion
+        fields = '__all__'
