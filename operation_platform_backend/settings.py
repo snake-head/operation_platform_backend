@@ -60,6 +60,7 @@ INSTALLED_APPS = [
     'apps.generatepicture',
     'apps.login',
     'apps.suggestion',
+    'apps.recaptcha',
     'drf_yasg',
     'apps.resource'
 ]
