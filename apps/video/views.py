@@ -827,3 +827,94 @@ class VideoViewSet(viewsets.ModelViewSet):
         print(f"DEBUG: 最终返回 {len(result)} 条记录")
         print("="*50 + "\n")
         return self.get_json_response(result)
+    
+    @swagger_auto_schema(
+        tags=["手术视频相关接口"],
+        operation_summary="获取用户最近观看视频",
+        operation_description="**获取用户最近观看的视频列表**",
+        manual_parameters=[
+            openapi.Parameter('openid', openapi.IN_QUERY, description="用户openID", type=openapi.TYPE_STRING, required=False),
+            openapi.Parameter('limit', openapi.IN_QUERY, description="返回记录数量", type=openapi.TYPE_INTEGER, default=3),
+        ],
+        responses={
+            200: openapi.Response(
+                description='成功',
+                schema=openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    properties={
+                        'success': openapi.Schema(type=openapi.TYPE_BOOLEAN, default=True),
+                        'code': openapi.Schema(type=openapi.TYPE_NUMBER, default=200),
+                        'msg': openapi.Schema(type=openapi.TYPE_STRING, default='成功'),
+                        'data': openapi.Schema(type=openapi.TYPE_ARRAY, items=openapi.Schema(
+                            type=openapi.TYPE_OBJECT,
+                            properties={
+                                'videoId': openapi.Schema(type=openapi.TYPE_STRING),
+                                'videoName': openapi.Schema(type=openapi.TYPE_STRING),
+                                'coverImgUrl': openapi.Schema(type=openapi.TYPE_STRING),
+                                'last_watched': openapi.Schema(type=openapi.TYPE_STRING),
+                                'duration': openapi.Schema(type=openapi.TYPE_INTEGER),
+                                'is_ended': openapi.Schema(type=openapi.TYPE_BOOLEAN)
+                            }
+                        ))
+                    }
+                )
+            )
+        }
+    )
+    @action(detail=False, methods=['get'], url_path='recent-watched')
+    def recent_watched(self, request, *args, **kwargs):
+        """获取用户最近观看的视频"""
+        from apps.video.models import VideoWatchRecord
+        from django.db.models import Max
+        
+        # 从查询参数获取openid
+        param_openid = request.query_params.get('openid')
+        limit = int(request.query_params.get('limit', 3))  # 默认显示3条
+        
+        # 获取用户openid
+        openid = param_openid
+        
+        # 如果查询参数中没有openid，尝试从其他来源获取
+        if not openid and request.user.is_authenticated:
+            openid = getattr(request.user, 'openid', None)
+        
+        client_ip = self.get_client_ip(request)
+        
+        # 构建查询条件
+        if openid:
+            # 已登录用户
+            filter_kwargs = {'openid': openid}
+        else:
+            # 匿名用户，使用IP地址
+            filter_kwargs = {'ip_address': client_ip}
+        
+        # 方案1: 使用子查询获取每个视频的最新记录
+        # 先找出每个视频的最新观看记录ID
+        latest_records_ids = VideoWatchRecord.objects.filter(
+            **filter_kwargs
+        ).values('video_id').annotate(
+            latest_id=Max('id')
+        ).values_list('latest_id', flat=True)
+        
+        # 然后获取这些记录的详细信息
+        recent_records = VideoWatchRecord.objects.filter(
+            id__in=latest_records_ids
+        ).select_related(
+            'video'
+        ).order_by(
+            '-updated_at'
+        )[:limit]
+        
+        # 格式化结果
+        result = []
+        for record in recent_records:
+            result.append({
+                'videoId': record.video.videoId,
+                'videoName': record.video.videoName,
+                'coverImgUrl': record.video.coverImgUrl,
+                'last_watched': record.updated_at.strftime('%Y-%m-%d %H:%M:%S'),
+                'duration': record.duration,
+                'is_ended': record.is_ended
+            })
+        
+        return self.get_json_response(result)
