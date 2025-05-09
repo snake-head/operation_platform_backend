@@ -9,6 +9,7 @@ from django.conf import settings
 from django.db import models
 from django.db.models.functions import TruncDate
 from django.db.models.expressions import RawSQL
+from django.db.models import Sum, Count
 from django.http import JsonResponse
 from django.utils.decorators import method_decorator
 from django_filters import rest_framework as filters
@@ -918,3 +919,62 @@ class VideoViewSet(viewsets.ModelViewSet):
             })
         
         return self.get_json_response(result)
+    
+    @swagger_auto_schema(
+        tags=["手术视频相关接口"],
+        operation_summary="获取类别总播放量",
+        operation_description="**根据课程ID获取该类别下所有视频的总播放量**",
+        manual_parameters=[
+            openapi.Parameter('courseId', openapi.IN_QUERY, description="课程ID", type=openapi.TYPE_STRING, required=True),
+        ],
+        responses={
+            200: openapi.Response(
+                description='成功',
+                schema=openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    properties={
+                        'success': openapi.Schema(type=openapi.TYPE_BOOLEAN, default=True),
+                        'code': openapi.Schema(type=openapi.TYPE_NUMBER, default=200),
+                        'msg': openapi.Schema(type=openapi.TYPE_STRING, default='成功'),
+                        'data': openapi.Schema(
+                            type=openapi.TYPE_OBJECT,
+                            properties={
+                                'courseId': openapi.Schema(type=openapi.TYPE_STRING, description='课程ID'),
+                                'total_view_count': openapi.Schema(type=openapi.TYPE_INTEGER, description='该类别总播放量')
+                            }
+                        )
+                    }
+                )
+            ),
+            400: openapi.Response(description='缺少 courseId 参数'),
+            404: openapi.Response(description='未找到该类别的视频')
+        }
+    )
+    @action(detail=False, methods=['get'], url_path='category-view-stats')
+    def category_view_stats(self, request, *args, **kwargs):
+        """获取指定课程ID下所有视频的总播放量"""
+        course_id = request.query_params.get('courseId')
+
+        if not course_id:
+            return JsonResponse({
+                'success': False,
+                'code': 400,
+                'msg': '缺少 courseId 参数'
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        # 查询属于该课程的所有视频，并计算总播放量
+        category_stats = Video.objects.filter(courseId=course_id).aggregate(
+            total_view_count=Sum('view_count')
+        )
+
+        total_views = category_stats.get('total_view_count') or 0
+
+        # 检查是否有视频属于该类别，以区分是播放量为0还是类别不存在
+        if not Video.objects.filter(courseId=course_id).exists() and total_views == 0:
+             # 可以选择返回 404 或返回播放量为 0
+             pass # 这里选择返回播放量为0
+
+        return self.get_json_response({
+            'courseId': course_id,
+            'total_view_count': total_views
+        })
