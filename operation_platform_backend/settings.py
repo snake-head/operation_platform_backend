@@ -61,6 +61,7 @@ INSTALLED_APPS = [
     'apps.login',
     'apps.suggestion',
     'apps.recaptcha',
+    'apps.statistics',
     'drf_yasg',
     'apps.resource'
 ]

@@ -31,6 +31,7 @@ from apps.generatepicture.urls import urlpatterns as generatepicture_urls
 from apps.login.urls import urlpatterns as login_urls
 from apps.suggestion.urls import urlpatterns as suggestion_urls
 from apps.recaptcha.urls import urlpatterns as recaptcha_urls
+from apps.statistics.urls import urlpatterns as statistics_urls
 from utils.exception_handler import http404handler, http500handler
 
 API_PREFIX = 'api/v1/'
@@ -60,6 +61,7 @@ urlpatterns = [
     path(API_PREFIX, include(suggestion_urls)),
     path(API_PREFIX, include(login_urls)),
     path(API_PREFIX, include(recaptcha_urls)), 
+    path(API_PREFIX, include(statistics_urls)),
     # 以下是几种不同的接口文档页面，可以选择一个最舒适的进行阅读
     re_path(r'^swagger(?P<format>\.json|\.yaml)$', schema_view.without_ui(cache_timeout=0), name='schema-json'),
     re_path(r'^swagger/$', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
